@@ -1,0 +1,16 @@
+{
+  "name": "reinvent-catalog",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "rm reinventGrabCatalog.zip && find ./ -path '*/.*' -prune -o -type f -print | zip ./reinventGrabCatalog.zip -@ && aws lambda update-function-code --region us-east-1 --function-name reinventGrabCatalog --zip-file fileb://./reinventGrabCatalog.zip",
+    "invoke": "npm run deploy && aws lambda invoke --function-name reinventGrabCatalog --payload '{}' --region us-east-1 output.txt && tail output.txt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com-murribu:murribu/reinvent-catalog.git"
+  },
+  "author": "Cory Martin",
+  "license": "ISC"
+}
