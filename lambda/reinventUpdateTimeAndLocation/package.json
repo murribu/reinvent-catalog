@@ -1,0 +1,12 @@
+{
+  "name": "reinventupdatetimeandlocation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "rm reinventUpdateTimeAndLocation.zip && find ./ -path '*/.*' -prune -o -type f -print | zip ./reinventUpdateTimeAndLocation.zip -@ && aws lambda update-function-code --region us-east-1 --function-name reinventUpdateTimeAndLocation --zip-file fileb://./reinventUpdateTimeAndLocation.zip",
+    "invoke": "npm run deploy && aws lambda invoke --function-name reinventUpdateTimeAndLocation --payload '{}' --region us-east-1 output.txt && tail output.txt"
+  },
+  "author": "Cory Martin",
+  "license": "ISC"
+}
