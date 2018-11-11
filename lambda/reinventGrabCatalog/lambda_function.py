@@ -78,6 +78,7 @@ def lambda_handler(event, context):
 
 def processContentAndSave(table, content):
     resultRows = content.select('.resultRow')
+    client = boto3.client('sns')
 
     for resultRow in resultRows:
         speakers = str(''.join(map(str,resultRow.find_all("small", {"class": "speakers"})[0].contents)))
@@ -103,8 +104,50 @@ def processContentAndSave(table, content):
             row_data['created_at'] = str(datetime.now())
             row_data['updated_at'] = str(datetime.now())
             table.put_item(Item=row_data)
+            message = {"new": row_data}
+            messageStr = ("NEW CLASS: "+ row_data["title"])[0:99]
+            response = client.publish(
+                TargetArn=os.environ["sns_arn"],
+                Message=json.dumps({'default': json.dumps(message),
+                    'sms': messageStr,
+                    'email': messageStr }),
+                Subject=messageStr,
+                MessageStructure='json'
+            )
         else:
-            if items[0]['abbr'] != row_data['abbr'] or items[0]['title'] != row_data['title'] or items[0]['abstract'] != row_data['abstract'] or items[0]['session_type'] != row_data['session_type'] or items[0]['speakers'] != row_data['speakers'] or items[0]['track'] != row_data['track']:
+            needsUpdating = False
+            emailMessage = ''
+            if items[0]['abbr'] != row_data['abbr']:
+                # needsUpdating = True
+                emailMessage += 'The abbr changed from ' + items[0]['abbr'] + ' to ' + row_data['abbr'] + '\n'
+            if items[0]['title'] != row_data['title']:
+                # needsUpdating = True
+                emailMessage += 'The title changed from ' + items[0]['title'] + ' to ' + row_data['title'] + '\n'
+            if items[0]['abstract'] != row_data['abstract']:
+                # needsUpdating = True
+                emailMessage += 'The abstract changed from ' + items[0]['abstract'] + ' to ' + row_data['abstract'] + '\n'
+            if items[0]['session_type'] != row_data['session_type']:
+                needsUpdating = True
+                emailMessage += 'The session_type changed from ' + items[0]['session_type'] + ' to ' + row_data['session_type'] + '\n'
+            if items[0]['speakers'] != row_data['speakers']:
+                # needsUpdating = True
+                emailMessage += 'The speakers changed from ' + items[0]['speakers'] + ' to ' + row_data['speakers'] + '\n'
+            if items[0]['track'] != row_data['track']:
+                # needsUpdating = True
+                emailMessage += 'The track changed from ' + items[0]['track'] + ' to ' + row_data['track'] + '\n'
+
+            if needsUpdating:
+                message = {"previous": items[0], "new": row_data}
+                client = boto3.client('sns')
+                emailSubject=("CLASS CHANGE: " + items[0]["title"])[0:99]
+                response = client.publish(
+                    TargetArn=os.environ["sns_arn"],
+                    Message=json.dumps({'default': json.dumps(message),
+                        'sms': emailSubject,
+                        'email': emailMessage }),
+                    Subject=emailSubject,
+                    MessageStructure='json'
+                )
                 table.update_item(
                     Key={ 'id': row_data["id"] },
                     UpdateExpression='Set abbr = :abbr, title = :title, abstract = :abstract, session_type = :session_type, speakers = :speakers, track = :track, updated_at = :updated_at',
@@ -115,7 +158,7 @@ def processContentAndSave(table, content):
                         ':session_type': row_data['session_type'],
                         ':speakers': row_data['speakers'],
                         ':track': row_data['track'],
-                        ':updated_at': datetime.now()
+                        ':updated_at': str(datetime.now())
                     }
                 )
 

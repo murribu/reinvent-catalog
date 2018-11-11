@@ -9,22 +9,10 @@ from boto3.dynamodb.conditions import Key, Attr
 def lambda_handler(event, context):
 	retval = []
 
-	message = {"foo": "bar"}
-	client = boto3.client('sns')
-	response = client.publish(
-		TargetArn=os.environ["sns_arn"],
-		Message=json.dumps({'default': json.dumps(message),
-			'sms': "start!",
-			'email': "start!"}),
-		Subject='The Reinvent UpdateTimeAndLocation process has started',
-		MessageStructure='json'
-	)
-
 	dynamo = boto3.resource('dynamodb')
 	table = dynamo.Table(os.environ["dynamotable"])
 
 	response = table.scan(ProjectionExpression="id,title,starttime,endtime,room")
-
 
 	for i in response["Items"]:
 		session_id = i["id"][8:]
@@ -58,6 +46,7 @@ def lambda_handler(event, context):
 
 		needsUpdating = False
 		updateExpression = 'Set updated_at = :updated_at,'
+		emailMessage = ''
 		expressionAttributeValues = {
 			':updated_at': str(datetime.now())
 		}
@@ -71,6 +60,7 @@ def lambda_handler(event, context):
 		if (not hasStartTime) or (obj[0]["startTime"] != i["starttime"]):
 			updateExpression += 'starttime = :starttime,'
 			expressionAttributeValues[':starttime'] = obj[0]["startTime"]
+			emailMessage += 'The startTime changed from ' + i["starttime"] + ' to ' + obj[0]["startTime"] + "\n"
 			needsUpdating = True
 
 		hasEndTime = True
@@ -82,6 +72,7 @@ def lambda_handler(event, context):
 		if (not hasEndTime) or (obj[0]["endTime"] != i["endtime"]):
 			updateExpression += 'endtime = :endtime,'
 			expressionAttributeValues[':endtime'] = obj[0]["endTime"]
+			emailMessage += 'The endTime changed from ' + i["endtime"] + ' to ' + obj[0]["endTime"] + "\n"
 			needsUpdating = True
 
 		hasRoom = True
@@ -93,17 +84,19 @@ def lambda_handler(event, context):
 		if (not hasRoom) or (obj[0]["room"] != i["room"]):
 			updateExpression += 'room = :room,'
 			expressionAttributeValues[':room'] = obj[0]["room"]
+			emailMessage += 'The room changed from ' + i["room"] + ' to ' + obj[0]["room"] + "\n"
 			needsUpdating = True
 
 		if needsUpdating:
 			message = {"previous": i, "new": obj}
 			client = boto3.client('sns')
+			emailSubject = ("CLASS CHANGE: " + i["title"])[0:99]
 			response = client.publish(
 				TargetArn=os.environ["sns_arn"],
 				Message=json.dumps({'default': json.dumps(message),
-					'sms': i["id"] + " has changed!",
-					'email': i["id"] + " has changed!"}),
-				Subject=i["id"] + " has changed!",
+					'sms': emailSubject,
+					'email': emailMessage}),
+				Subject=emailSubject,
 				MessageStructure='json'
 			)
 			table.update_item(
@@ -112,16 +105,5 @@ def lambda_handler(event, context):
 				ExpressionAttributeValues=expressionAttributeValues
 			)
 		# [{"action": null, "imageStyle": "imageAddDisabled", "message": "You must log in to schedule.", "startTime": "Thursday, Nov 29, 12:15 PM", "endTime": "2:30 PM", "room": "Venetian, Level 4, Lando 4205", "roomId": 1984, "mapId": 0, "sessionTimeID": 16973}]]
-
-	message = {"foo": "bar"}
-	client = boto3.client('sns')
-	response = client.publish(
-		TargetArn=os.environ["sns_arn"],
-		Message=json.dumps({'default': json.dumps(message),
-			'sms': "stop!",
-			'email': "stop!"}),
-		Subject='The Reinvent UpdateTimeAndLocation process has finished!',
-		MessageStructure='json'
-	)
 
 	return page.text
