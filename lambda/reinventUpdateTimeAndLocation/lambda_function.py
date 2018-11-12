@@ -60,7 +60,10 @@ def lambda_handler(event, context):
 		if (not hasStartTime) or (obj[0]["startTime"] != i["starttime"]):
 			updateExpression += 'starttime = :starttime,'
 			expressionAttributeValues[':starttime'] = obj[0]["startTime"]
-			emailMessage += 'The startTime changed from ' + i["starttime"] + ' to ' + obj[0]["startTime"] + "\n"
+			if not hasStartTime:
+				emailMessage += 'The startTime is now ' + obj[0]["startTime"] + "\n"
+			else:
+				emailMessage += 'The startTime changed from ' + i["starttime"] + ' to ' + obj[0]["startTime"] + "\n"
 			needsUpdating = True
 
 		hasEndTime = True
@@ -72,7 +75,10 @@ def lambda_handler(event, context):
 		if (not hasEndTime) or (obj[0]["endTime"] != i["endtime"]):
 			updateExpression += 'endtime = :endtime,'
 			expressionAttributeValues[':endtime'] = obj[0]["endTime"]
-			emailMessage += 'The endTime changed from ' + i["endtime"] + ' to ' + obj[0]["endTime"] + "\n"
+			if not hasEndTime:
+				emailMessage += 'The endTime is now ' + obj[0]["endTime"] + "\n"
+			else:
+				emailMessage += 'The endTime changed from ' + i["endtime"] + ' to ' + obj[0]["endTime"] + "\n"
 			needsUpdating = True
 
 		hasRoom = True
@@ -84,7 +90,10 @@ def lambda_handler(event, context):
 		if (not hasRoom) or (obj[0]["room"] != i["room"]):
 			updateExpression += 'room = :room,'
 			expressionAttributeValues[':room'] = obj[0]["room"]
-			emailMessage += 'The room changed from ' + i["room"] + ' to ' + obj[0]["room"] + "\n"
+			if not hasRoom:
+				emailMessage += 'The room is now ' + obj[0]["room"] + "\n"
+			else:
+				emailMessage += 'The room changed from ' + i["room"] + ' to ' + obj[0]["room"] + "\n"
 			needsUpdating = True
 
 		if needsUpdating:

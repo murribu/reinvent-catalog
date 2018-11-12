@@ -105,13 +105,14 @@ def processContentAndSave(table, content):
             row_data['updated_at'] = str(datetime.now())
             table.put_item(Item=row_data)
             message = {"new": row_data}
-            messageStr = ("NEW CLASS: "+ row_data["title"])[0:99]
+            emailSubject = ("NEW CLASS: "+ row_data["title"])[0:99]
+            messageStr = "New Class: <a href='https://www.portal.reinvent.awsevents.com/connect/search.ww#loadSearch-searchPhrase=" + row_data["abbr"] + "&searchType=session&tc=0&sortBy=abbreviationSort&p='>" + row_data["title"] + "</a>"
             response = client.publish(
                 TargetArn=os.environ["sns_arn"],
                 Message=json.dumps({'default': json.dumps(message),
-                    'sms': messageStr,
+                    'sms': emailSubject,
                     'email': messageStr }),
-                Subject=messageStr,
+                Subject=emailSubject,
                 MessageStructure='json'
             )
         else:

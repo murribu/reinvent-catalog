@@ -1,1 +1,1 @@
-{"errorMessage":"2018-11-01T22:01:09.734Z 9d67e9b8-de21-11e8-84ea-b12e6af451c2 Task timed out after 10.01 seconds"}
+{"errorMessage": "'room'", "errorType": "KeyError", "stackTrace": [["/var/task/lambda_function.py", 93, "lambda_handler", "emailMessage += 'The room changed from ' + i[\"room\"] + ' to ' + obj[0][\"room\"] + \"\\n\""]]}
