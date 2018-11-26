@@ -1,1 +1,1 @@
-{"errorMessage": "'room'", "errorType": "KeyError", "stackTrace": [["/var/task/lambda_function.py", 93, "lambda_handler", "emailMessage += 'The room changed from ' + i[\"room\"] + ' to ' + obj[0][\"room\"] + \"\\n\""]]}
+{"errorMessage": "list index out of range", "errorType": "IndexError", "stackTrace": [["/var/task/lambda_function.py", 67, "lambda_handler", "tmp = obj[0][\"startTime\"]"]]}

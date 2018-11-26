@@ -38,7 +38,7 @@ def lambda_handler(event, context):
         content = BeautifulSoup(page.text, 'html.parser')
         
         s3 = boto3.client('s3')
-        s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key='1.html')
+        # s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key='1.html')
             
         processContentAndSave(table, content)
 
@@ -68,7 +68,7 @@ def lambda_handler(event, context):
             content = BeautifulSoup(page.text, 'html.parser')
             
             s3 = boto3.client('s3')
-            s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key='%d.html' % i)
+            # s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key='%d.html' % i)
 
             row_count = processContentAndSave(table, content)
             retval.append('row_count = %d' % row_count)
@@ -105,8 +105,13 @@ def processContentAndSave(table, content):
             row_data['updated_at'] = str(datetime.now())
             table.put_item(Item=row_data)
             message = {"new": row_data}
-            emailSubject = ("NEW CLASS: "+ row_data["title"])[0:99]
-            messageStr = "New Class: <a href='https://www.portal.reinvent.awsevents.com/connect/search.ww#loadSearch-searchPhrase=" + row_data["abbr"] + "&searchType=session&tc=0&sortBy=abbreviationSort&p='>" + row_data["title"] + "</a>"
+            emailSubject = ("NEW " + row_data["session_type"] + ": "+ row_data["title"])[0:99]
+            abbr_end_index = -1
+            try:
+                abbr_end_index = row_data["abbr"].index('-')
+            except:
+                abbr_end_index = -1
+            messageStr = "New " + row_data["session_type"] + ": " + row_data["title"] + "\nhttps://www.portal.reinvent.awsevents.com/connect/search.ww#loadSearch-searchPhrase=" + (row_data["abbr"]).strip()[0:abbr_end_index].strip() + "&searchType=session&tc=0&sortBy=abbreviationSort&p="
             response = client.publish(
                 TargetArn=os.environ["sns_arn"],
                 Message=json.dumps({'default': json.dumps(message),

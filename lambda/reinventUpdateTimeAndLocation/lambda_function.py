@@ -37,7 +37,7 @@ def lambda_handler(event, context):
 		content = BeautifulSoup(page.text, 'html.parser')
 
 		s3 = boto3.client('s3')
-		s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key=session_id + '.html')
+		# s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key=session_id + '.html')
 
 		funcCall = page.text.split('\n')[5]
 		data = funcCall[37:-4]
@@ -52,12 +52,18 @@ def lambda_handler(event, context):
 		}
 
 		hasStartTime = True
+		hasStartTimeToReplace = True
 		try:
 			i["starttime"]
 		except KeyError:
 			hasStartTime = False
+		try:
+			obj[0]
+			obj[0]["startTime"]
+		except IndexError:
+			hasStartTimeToReplace = False
 
-		if (not hasStartTime) or (obj[0]["startTime"] != i["starttime"]):
+		if hasStartTimeToReplace and ((not hasStartTime) or (obj[0]["startTime"] != i["starttime"])):
 			updateExpression += 'starttime = :starttime,'
 			expressionAttributeValues[':starttime'] = obj[0]["startTime"]
 			if not hasStartTime:
@@ -67,12 +73,19 @@ def lambda_handler(event, context):
 			needsUpdating = True
 
 		hasEndTime = True
+		hasEndTimeToReplace = True
 		try:
 			i["endtime"]
 		except KeyError:
 			hasEndTime = False
 
-		if (not hasEndTime) or (obj[0]["endTime"] != i["endtime"]):
+		try:
+			obj[0]
+			obj[0]["endTime"]
+		except IndexError:
+			hasEndTimeToReplace = False
+
+		if hasEndTimeToReplace and ((not hasEndTime) or (obj[0]["endTime"] != i["endtime"])):
 			updateExpression += 'endtime = :endtime,'
 			expressionAttributeValues[':endtime'] = obj[0]["endTime"]
 			if not hasEndTime:
@@ -82,12 +95,19 @@ def lambda_handler(event, context):
 			needsUpdating = True
 
 		hasRoom = True
+		hasRoomToReplace = True
 		try:
 			i["room"]
 		except KeyError:
 			hasRoom = False
 
-		if (not hasRoom) or (obj[0]["room"] != i["room"]):
+		try:
+			obj[0]
+			obj[0]["room"]
+		except IndexError:
+			hasRoomToReplace = False
+
+		if hasRoomToReplace and ((not hasRoom) or (obj[0]["room"] != i["room"])):
 			updateExpression += 'room = :room,'
 			expressionAttributeValues[':room'] = obj[0]["room"]
 			if not hasRoom:
@@ -97,17 +117,17 @@ def lambda_handler(event, context):
 			needsUpdating = True
 
 		if needsUpdating:
-			message = {"previous": i, "new": obj}
-			client = boto3.client('sns')
-			emailSubject = ("CLASS CHANGE: " + i["title"])[0:99]
-			response = client.publish(
-				TargetArn=os.environ["sns_arn"],
-				Message=json.dumps({'default': json.dumps(message),
-					'sms': emailSubject,
-					'email': emailMessage}),
-				Subject=emailSubject,
-				MessageStructure='json'
-			)
+			# message = {"previous": i, "new": obj}
+			# client = boto3.client('sns')
+			# emailSubject = ("CLASS CHANGE: " + i["title"])[0:99]
+			# response = client.publish(
+			# 	TargetArn=os.environ["sns_arn"],
+			# 	Message=json.dumps({'default': json.dumps(message),
+			# 		'sms': emailSubject,
+			# 		'email': emailMessage}),
+			# 	Subject=emailSubject,
+			# 	MessageStructure='json'
+			# )
 			table.update_item(
 				Key={ 'id': i["id"] },
 				UpdateExpression=updateExpression[:-1],
