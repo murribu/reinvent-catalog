@@ -1,12 +1,16 @@
 Session Type Ids
 
-Workshop = 1000
-Spotlight Lab = 1780
+Workshop = 2523
+Spotlight Lab = 2832
 Session = 2
 Lightning Talk = 1440
 Hackathon = 1040
 Demo Session = 1560
-Chalk Talk = 1700
-Builders Session = 1781
+Chalk Talk = 2623
+Builders Session = 2624
 After Hours = 1921
-Activity = 1920
+Activity = 2823
+Tatonka = 3323
+Hackathons and Jams = 2834
+20-Minute Presentation = 2723
+Dev Chat = 2828

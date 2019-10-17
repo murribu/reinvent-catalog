@@ -10,7 +10,7 @@ def lambda_handler(event, context):
     dynamo = boto3.resource('dynamodb')
     table = dynamo.Table(os.environ["dynamotable"])
 
-    sessionTypeIDs = ['1000', '1780', '2', '1440', '1040', '1560', '1700', '1781', '1921', '1920']
+    sessionTypeIDs = ['2523', '2832', '2', '1440', '1040', '1560', '2623', '2624', '1921', '2823', '3323', '2834', '2723', '2828']
     retval = []
 
     headers = {
@@ -88,9 +88,9 @@ def processContentAndSave(table, content):
         row_data = {
             'id': resultRow.attrs["id"],
             'abbr': resultRow.find("span", {"class": "abbreviation"}).string.strip(),
-            'title': resultRow.find("span", {"class": "title"}).string.strip(),
-            'abstract': resultRow.find("span", {"class": "abstract"}).string.strip(),
-            'session_type': resultRow.find("small", {"class": "type"}).string.strip(),
+            'title': (resultRow.find("span", {"class": "title"}).string or "").strip(),
+            'abstract': (resultRow.find("span", {"class": "abstract"}).string or "").strip(),
+            'session_type': (resultRow.find("small", {"class": "type"}).string or "").strip(),
             'speakers': speakers,
             'track': track,
             # "html": str(resultRow)
