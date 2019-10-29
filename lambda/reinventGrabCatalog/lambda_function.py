@@ -81,10 +81,16 @@ def processContentAndSave(table, content):
     client = boto3.client('sns')
 
     for resultRow in resultRows:
-        speakers = str(''.join(map(str,resultRow.find_all("small", {"class": "speakers"})[0].contents)))
-        speakers = speakers if speakers != "" else " "
-        track = str(''.join(map(str,resultRow.find_all("span", {"class": "track"})[0].contents)))
-        track = track if track != "" else " "
+        if len(resultRow.find_all("small", {"class": "speakers"})) > 0:
+            speakers = str(''.join(map(str,resultRow.find_all("small", {"class": "speakers"})[0].contents)))
+            speakers = speakers if speakers != "" else " "
+        else:
+            speakers = " "
+        if len(resultRow.find_all("span", {"class": "track"})) > 0:
+            track = str(''.join(map(str,resultRow.find_all("span", {"class": "track"})[0].contents)))
+            track = track if track != "" else " "
+        else:
+            track = " "
         row_data = {
             'id': resultRow.attrs["id"],
             'abbr': resultRow.find("span", {"class": "abbreviation"}).string.strip(),
