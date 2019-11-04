@@ -11,6 +11,7 @@ def lambda_handler(event, context):
     table = dynamo.Table(os.environ["dynamotable"])
 
     sessionTypeIDs = ['2523', '2832', '2', '1440', '1040', '1560', '2623', '2624', '1921', '2823', '3323', '2834', '2723', '2828']
+    dayIDs = ['330', '170', '31', '130', '111', '230' ]
     retval = []
 
     headers = {
@@ -32,47 +33,48 @@ def lambda_handler(event, context):
 
     i = 1
     for sessionTypeID in sessionTypeIDs:
-        data = {"searchPhrase": "", "searchType": "session", "tc": "0", "sortBy": "abbreviationSort", "p": "", "sessionTypeID": sessionTypeID}
-        page = requests.post("https://www.portal.reinvent.awsevents.com/connect/processSearchFilters.do", headers=headers, data=data)
-        
-        content = BeautifulSoup(page.text, 'html.parser')
-        
-        s3 = boto3.client('s3')
-        # s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key='1.html')
-            
-        processContentAndSave(table, content)
-
-        #second call
-
-        keepLooping = True
-        while keepLooping:
-            i += 1
-            awsalb = ''
-            # sessionidconnect = ''
-            retval.append("\ni = %d" % i)
-            retval.append(page.headers['Set-Cookie'])
-            for entry in page.headers['Set-Cookie'].split('; '):
-                # retval.append(entry.split('=')[0])
-                if (entry.split('=')[0] == 'AWSALB'):
-                    awsalb = entry.split('=')[1]
-                if (entry.split('=')[0] == 'Path' and entry.split('=')[1] == '/, SESSIONIDconnect'):
-                    sessionidconnect = entry.split('=')[2]
-
-            headers["cookie"] = "DWRSESSIONID=nNNQ8ZylsbVlrLX1TUpsMzSNppm; _ga=GA1.2.603512740.1498063034; s_fid=4DF3153FC00FF9A8-00D998B2CA4F09CE; regStatus=pre-register; session-set=true; aws-priv=eyJ2IjoxLCJzdCI6MX0=; __atssc=google%3B1; s_campaign=em%7Cawsreinvent_reg_reminder%7Cem_84172%7Cevent_ev_reinvent%7Cevent%7Cglobal%7Cmult%7Cem_84172; c_m=emundefinedEmailundefined; s_cc=true; s_eVar60=em_84172; cookieAgreement=agreed; SESSIONIDportal=aaaZC9WE1bIhL_m8YXzzw; s_vn=1561578928706%26vn%3D5; s_sq=%5B%5BB%5D%5D; s_dslv=1539197425868; s_nr=1539197425870-Repeat; SESSIONIDconnect=" + sessionidconnect + "; __atuvc=0%7C37%2C0%7C38%2C0%7C39%2C0%7C40%2C34%7C41; __atuvs=5bc2a4f5bfc9bf9e000; AWSALB=" + awsalb
-
-            # retval.append(headers["cookie"])
-            
-            data = {"searchType": "session", "more": "true"}
+        for dayID in dayIDs:
+            data = {"searchPhrase": "", "searchType": "session", "tc": "0", "sortBy": "abbreviationSort", "p": "", "sessionTypeID": sessionTypeID, "dayID": dayID}
             page = requests.post("https://www.portal.reinvent.awsevents.com/connect/processSearchFilters.do", headers=headers, data=data)
-
+            
             content = BeautifulSoup(page.text, 'html.parser')
             
             s3 = boto3.client('s3')
-            # s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key='%d.html' % i)
+            # s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key='1.html')
+                
+            processContentAndSave(table, content)
 
-            row_count = processContentAndSave(table, content)
-            retval.append('row_count = %d' % row_count)
-            keepLooping = row_count > 0
+            #second call
+
+            keepLooping = True
+            while keepLooping:
+                i += 1
+                awsalb = ''
+                # sessionidconnect = ''
+                retval.append("\ni = %d" % i)
+                retval.append(page.headers['Set-Cookie'])
+                for entry in page.headers['Set-Cookie'].split('; '):
+                    # retval.append(entry.split('=')[0])
+                    if (entry.split('=')[0] == 'AWSALB'):
+                        awsalb = entry.split('=')[1]
+                    if (entry.split('=')[0] == 'Path' and entry.split('=')[1] == '/, SESSIONIDconnect'):
+                        sessionidconnect = entry.split('=')[2]
+
+                headers["cookie"] = "DWRSESSIONID=nNNQ8ZylsbVlrLX1TUpsMzSNppm; _ga=GA1.2.603512740.1498063034; s_fid=4DF3153FC00FF9A8-00D998B2CA4F09CE; regStatus=pre-register; session-set=true; aws-priv=eyJ2IjoxLCJzdCI6MX0=; __atssc=google%3B1; s_campaign=em%7Cawsreinvent_reg_reminder%7Cem_84172%7Cevent_ev_reinvent%7Cevent%7Cglobal%7Cmult%7Cem_84172; c_m=emundefinedEmailundefined; s_cc=true; s_eVar60=em_84172; cookieAgreement=agreed; SESSIONIDportal=aaaZC9WE1bIhL_m8YXzzw; s_vn=1561578928706%26vn%3D5; s_sq=%5B%5BB%5D%5D; s_dslv=1539197425868; s_nr=1539197425870-Repeat; SESSIONIDconnect=" + sessionidconnect + "; __atuvc=0%7C37%2C0%7C38%2C0%7C39%2C0%7C40%2C34%7C41; __atuvs=5bc2a4f5bfc9bf9e000; AWSALB=" + awsalb
+
+                # retval.append(headers["cookie"])
+                
+                data = {"searchType": "session", "more": "true"}
+                page = requests.post("https://www.portal.reinvent.awsevents.com/connect/processSearchFilters.do", headers=headers, data=data)
+
+                content = BeautifulSoup(page.text, 'html.parser')
+                
+                s3 = boto3.client('s3')
+                # s3.put_object(Body=page.text, Bucket='reinvent-grabs', Key='%d.html' % i)
+
+                row_count = processContentAndSave(table, content)
+                retval.append('row_count = %d' % row_count)
+                keepLooping = row_count > 0
 
     return retval
 
@@ -107,6 +109,7 @@ def processContentAndSave(table, content):
         response = table.query(KeyConditionExpression=Key('id').eq(row_data["id"]))
         items = response['Items']
         if len(items) == 0:
+            print('new')
             row_data['created_at'] = str(datetime.now())
             row_data['updated_at'] = str(datetime.now())
             table.put_item(Item=row_data)
